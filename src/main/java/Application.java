@@ -1,5 +1,10 @@
+import api.Products;
 import base.API;
 import base.APIContext;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Scanner;
 
 public class Application {
   public static void main(String args[]) {
@@ -7,5 +12,11 @@ public class Application {
     API cwsAPI = new API(apiContext);
     cwsAPI.authorize();
 
+    try {
+      List<Products> productsList = cwsAPI.getAllProducts();
+      System.out.print(productsList);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }

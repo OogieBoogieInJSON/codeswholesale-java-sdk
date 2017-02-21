@@ -16,10 +16,10 @@ public final class OAuthTokenCredential {
     Call<AccessToken> accessTokenCall = accessTokenRequestFactory.generateOAuthToken(apiContext.getGrantType(), apiContext.getClientId(), apiContext.getClientSecret());
 
     try {
-      Response x = accessTokenCall.execute();
-      AccessToken accessTokenResponse = (AccessToken) x.body();
+      Response accessTokenResponse = accessTokenCall.execute();
+      AccessToken accessTokenResponseBody = (AccessToken) accessTokenResponse.body();
 
-      return accessTokenResponse;
+      return accessTokenResponseBody;
     } catch (IOException e) {
       throw e;
     }
