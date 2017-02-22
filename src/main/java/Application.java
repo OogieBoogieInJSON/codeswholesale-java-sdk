@@ -1,10 +1,11 @@
-import api.Products;
 import base.API;
 import base.APIContext;
+import resources.AccountDetails;
+import resources.MultipleOrder;
+import resources.Order;
+import resources.ProductsResponse;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Scanner;
 
 public class Application {
   public static void main(String args[]) {
@@ -13,8 +14,8 @@ public class Application {
     cwsAPI.authorize();
 
     try {
-      List<Products> productsList = cwsAPI.getAllProducts();
-      System.out.print(productsList);
+      MultipleOrder order = cwsAPI.createMultipleCodesOrder("d3710041-3594-42dd-9462-79fb59024062", 10);
+      System.out.print(order);
     } catch (IOException e) {
       e.printStackTrace();
     }

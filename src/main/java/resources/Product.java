@@ -1,6 +1,5 @@
 package resources;
 
-import com.google.gson.annotations.SerializedName;
 import lombok.Getter;
 import lombok.Setter;
 import models.Price;
@@ -9,7 +8,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class Products {
+public class Product {
   private String productId;
 
   private String name;
