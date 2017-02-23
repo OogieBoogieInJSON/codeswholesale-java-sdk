@@ -4,9 +4,6 @@ import api.Account;
 import api.Orders;
 import lombok.Getter;
 import lombok.Setter;
-import okhttp3.Interceptor;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import resources.*;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -17,8 +14,6 @@ import java.io.IOException;
 @Getter
 @Setter
 public class API {
-  private String authHeaderName = "Authorization";
-  private String authHeaderValue;
   private APIContext apiContext;
   private AccessToken accessToken;
 
@@ -40,26 +35,7 @@ public class API {
     try {
       accessToken = OAuthTokenCredential.generateToken(apiContext);
 
-      if (accessToken == null) {
-        return;
-      }
-
-      OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-      httpClient.addInterceptor(new Interceptor() {
-        @Override
-        public okhttp3.Response intercept(Interceptor.Chain chain) throws IOException {
-          Request original = chain.request();
-
-          Request request = original.newBuilder()
-            .header(authHeaderName, accessToken.getTokenType() + " " + accessToken.getAccessToken())
-            .method(original.method(), original.body())
-            .build();
-
-          return chain.proceed(request);
-        }
-      });
-
-      requestManager = RequestManager.createNewWithHttpClient(httpClient);
+      RequestManager.addAuthorizationHeader(accessToken);
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -69,14 +45,14 @@ public class API {
     return accessToken.getExpiresIn() >= 0;
   }
 
-  public ProductsResponse getAllProducts() throws IOException {
-    Call<ProductsResponse> allProductsCall = requestManager.create(api.Products.class).getAllProducts();
+  public Products getAllProducts() throws IOException {
+    Call<Products> call = requestManager.create(api.Products.class).getAllProducts();
 
     try {
-      Response allProductsResponse = allProductsCall.execute();
-      ProductsResponse allProductsResponseBody = (ProductsResponse) allProductsResponse.body();
+      Response response = call.execute();
+      Products body = (Products) response.body();
 
-      return allProductsResponseBody;
+      return body;
     } catch (IOException e) {
       throw e;
     }

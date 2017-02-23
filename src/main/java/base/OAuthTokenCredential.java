@@ -11,14 +11,21 @@ import java.io.IOException;
 
 public final class OAuthTokenCredential {
   public static AccessToken generateToken(APIContext apiContext) throws IOException {
-    Auth accessTokenRequestFactory = RequestManager.getInstance().create(Auth.class);
-    Call<AccessToken> accessTokenCall = accessTokenRequestFactory.generateOAuthToken(apiContext.getGrantType(), apiContext.getClientId(), apiContext.getClientSecret());
+    Call<AccessToken> call = RequestManager
+      .getInstance()
+      .create(Auth.class)
+      .generateOAuthToken(apiContext.getGrantType(), apiContext.getClientId(), apiContext.getClientSecret());
+
 
     try {
-      Response accessTokenResponse = accessTokenCall.execute();
-      AccessToken accessTokenResponseBody = (AccessToken) accessTokenResponse.body();
+      Response response = call.execute();
 
-      return accessTokenResponseBody;
+      if (response.isSuccessful()) {
+        return (AccessToken) response.body();
+      }
+
+      System.out.print(response.errorBody());
+      throw new IOException("yolo");
     } catch (IOException e) {
       throw e;
     }

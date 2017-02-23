@@ -7,6 +7,6 @@ import java.util.Collection;
 
 @Getter
 @Setter
-public class ProductsResponse {
+public class Products {
   private Collection<Product> items;
 }
