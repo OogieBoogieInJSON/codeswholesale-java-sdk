@@ -55,9 +55,9 @@ public class APIContext {
    * @param clientId
    * @param clientSecret
    */
-  public APIContext(String host, String clientId, String clientSecret) {
-    this.host = host;
-    this.clientId = clientId;
-    this.clientSecret = clientSecret;
-  }
+//  public APIContext(String host, String clientId, String clientSecret) {
+//    this.host = host;
+//    this.clientId = clientId;
+//    this.clientSecret = clientSecret;
+//  }
 }

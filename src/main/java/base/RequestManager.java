@@ -1,6 +1,10 @@
 package base;
 
+import com.google.gson.Gson;
+import exception.AuthorizationFailedException;
 import lombok.Setter;
+import lombok.SneakyThrows;
+import models.ErrorResponse;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -14,62 +18,54 @@ public final class RequestManager {
   private static final String AUTH_HEADER_NAME = "Authorization";
 
   @Setter
-  private static String host;
-
-  private static AccessToken accessToken;
+  private static String host = "https://api.codeswholesale.com";
 
   private static Retrofit retrofitInstance;
 
-  public static Retrofit getInstance() {
-    synchronized (RequestManager.class) {
-      if (retrofitInstance == null) {
-        retrofitInstance = buildHttpClient();
-      }
+  private static Gson gson = new Gson();
 
-      return retrofitInstance;
+  private static OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+
+  private static Retrofit.Builder builder = new Retrofit.Builder()
+    .baseUrl(host)
+    .addConverterFactory(GsonConverterFactory.create());
+
+  public static <S> S createService(Class<S> serviceClass) {
+    return createService(serviceClass, null);
+  }
+
+  public static <S> S createService(Class<S> serviceClass, String grantType, String clientId, String clientSecret) {
+    try {
+      AccessToken accessToken = OAuthTokenCredential.generateToken(grantType, clientId, clientSecret);
+
+      return createService(serviceClass, accessToken.getTokenType() + " " + accessToken.getAccessToken());
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (AuthorizationFailedException e) {
+      e.printStackTrace();
     }
+
+    return createService(serviceClass, null);
   }
 
-  public static void addAuthorizationHeader(AccessToken _accessToken) {
-    accessToken = _accessToken;
+  public static <S> S createService(Class<S> serviceClass, String authToken) {
+    AuthenticationInterceptor interceptor = new AuthenticationInterceptor(authToken);
 
-    buildAuthorizedHttpClient();
-  }
+    if (!httpClient.interceptors().contains(interceptor)) {
+      httpClient.addInterceptor(interceptor);
+      builder.client(httpClient.build());
+      retrofitInstance = builder.build();
+    }
 
-  /**
-   * Creates a new instance of Retrofit with a new interceptor for adding authorization header
-   */
-  private static void buildAuthorizedHttpClient() {
-    OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-
-    httpClient.addInterceptor(new Interceptor() {
-      @Override
-      public Response intercept(Interceptor.Chain chain) throws IOException {
-        Request original = chain.request();
-
-        Request request = original.newBuilder()
-          .header(AUTH_HEADER_NAME, accessToken.getTokenType() + " " + accessToken.getAccessToken())
-          .method(original.method(), original.body())
-          .build();
-
-        return chain.proceed(request);
-      }
-    });
-
-    OkHttpClient authorizedHttpClient = httpClient.build();
-    retrofitInstance = new Retrofit.Builder()
-      .addConverterFactory(GsonConverterFactory.create())
-      .client(authorizedHttpClient)
-      .build();
+    return retrofitInstance.create(serviceClass);
   }
 
   /**
-   * Create a new instance of Retrofit
+   * Convert error body string to object
+   * @param response
+   * @return converted error body string
    */
-  private static Retrofit buildHttpClient() {
-    return new Retrofit.Builder()
-      .addConverterFactory(GsonConverterFactory.create())
-      .baseUrl(host)
-      .build();
+  public static ErrorResponse resolveErrorBodyFromResponse(retrofit2.Response response) throws IOException {
+    return gson.fromJson(response.errorBody().string(), ErrorResponse.class);
   }
 }

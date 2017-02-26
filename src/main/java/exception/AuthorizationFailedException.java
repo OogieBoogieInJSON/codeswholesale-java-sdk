@@ -1,7 +1,15 @@
 package exception;
 
 public class AuthorizationFailedException extends Exception {
-  public AuthorizationFailedException() {
+  private String message;
 
+  public AuthorizationFailedException(String message) {
+    super(message);
+
+    this.message = message;
+  }
+
+  public String getError() {
+    return message;
   }
 }
