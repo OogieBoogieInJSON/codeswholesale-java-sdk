@@ -3,22 +3,22 @@ package base;
 import com.google.gson.Gson;
 import exception.AuthorizationFailedException;
 import lombok.Setter;
-import lombok.SneakyThrows;
 import models.ErrorResponse;
-import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import retrofit2.GsonConverterFactory;
 import retrofit2.Retrofit;
 
 import java.io.IOException;
 
 public final class RequestManager {
-  private static final String AUTH_HEADER_NAME = "Authorization";
-
   @Setter
   private static String host = "https://api.codeswholesale.com";
+
+  @Setter
+  private static APIContext apiContext;
+
+  @Setter
+  private static AccessToken accessToken;
 
   private static Retrofit retrofitInstance;
 
@@ -30,26 +30,30 @@ public final class RequestManager {
     .baseUrl(host)
     .addConverterFactory(GsonConverterFactory.create());
 
-  public static <S> S createService(Class<S> serviceClass) {
-    return createService(serviceClass, null);
+  private static Boolean isAuthenticated = false;
+
+  public static <S> S createUnauthenticatedService(Class<S> serviceClass) {
+    return new Retrofit.Builder().baseUrl(host).addConverterFactory(GsonConverterFactory.create()).build().create(serviceClass);
   }
 
-  public static <S> S createService(Class<S> serviceClass, String grantType, String clientId, String clientSecret) {
-    try {
-      AccessToken accessToken = OAuthTokenCredential.generateToken(grantType, clientId, clientSecret);
-
-      return createService(serviceClass, accessToken.getTokenType() + " " + accessToken.getAccessToken());
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (AuthorizationFailedException e) {
-      e.printStackTrace();
+  public static <S> S createService(Class<S> serviceClass) throws IOException, AuthorizationFailedException {
+    if (!isAuthenticated) {
+      accessToken = authenticate(apiContext);
     }
 
-    return createService(serviceClass, null);
+    return createAuthenticatedService(serviceClass);
   }
 
-  public static <S> S createService(Class<S> serviceClass, String authToken) {
-    AuthenticationInterceptor interceptor = new AuthenticationInterceptor(authToken);
+  public static AccessToken authenticate(APIContext apiContext) throws AuthorizationFailedException, IOException {
+    AccessToken accessToken = OAuthTokenCredential.generateToken(apiContext);
+
+    isAuthenticated = true;
+
+    return accessToken;
+  }
+
+  private static <S> S createAuthenticatedService(Class<S> serviceClass) {
+    AuthenticationInterceptor interceptor = new AuthenticationInterceptor(accessToken, apiContext);
 
     if (!httpClient.interceptors().contains(interceptor)) {
       httpClient.addInterceptor(interceptor);

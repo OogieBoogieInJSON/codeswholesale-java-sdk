@@ -15,6 +15,8 @@ public class Application {
       System.out.print(products);
     } catch (IOException e) {
       e.printStackTrace();
+    } catch (AuthorizationFailedException e) {
+      e.printStackTrace();
     }
   }
 }
