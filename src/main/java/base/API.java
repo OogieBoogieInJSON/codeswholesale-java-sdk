@@ -6,6 +6,8 @@ import exception.AuthorizationFailedException;
 import lombok.Getter;
 import lombok.Setter;
 import resources.*;
+import retrofit2.Call;
+import retrofit2.Response;
 
 import java.io.IOException;
 

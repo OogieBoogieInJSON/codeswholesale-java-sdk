@@ -47,17 +47,4 @@ public class APIContext {
     this.clientId = clientId;
     this.clientSecret = clientSecret;
   }
-
-  /**
-   * Pass the host, client id and client secret
-   * @constructor
-   * @param host
-   * @param clientId
-   * @param clientSecret
-   */
-//  public APIContext(String host, String clientId, String clientSecret) {
-//    this.host = host;
-//    this.clientId = clientId;
-//    this.clientSecret = clientSecret;
-//  }
 }

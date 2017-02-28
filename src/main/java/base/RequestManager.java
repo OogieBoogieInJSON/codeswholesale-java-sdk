@@ -33,7 +33,13 @@ public final class RequestManager {
   private static Boolean isAuthenticated = false;
 
   public static <S> S createUnauthenticatedService(Class<S> serviceClass) {
-    return new Retrofit.Builder().baseUrl(host).addConverterFactory(GsonConverterFactory.create()).build().create(serviceClass);
+    OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+    Retrofit.Builder builder = new Retrofit.Builder().baseUrl(host).addConverterFactory(GsonConverterFactory.create());
+
+    httpClient.addInterceptor(new ErrorInterceptor());
+    builder.client(httpClient.build());
+
+    return builder.build().create(serviceClass);
   }
 
   public static <S> S createService(Class<S> serviceClass) throws IOException, AuthorizationFailedException {
@@ -53,10 +59,15 @@ public final class RequestManager {
   }
 
   private static <S> S createAuthenticatedService(Class<S> serviceClass) {
-    AuthenticationInterceptor interceptor = new AuthenticationInterceptor(accessToken, apiContext);
+    AuthenticationInterceptor authenticationInterceptor = new AuthenticationInterceptor(accessToken, apiContext);
+    ErrorInterceptor errorInterceptor = new ErrorInterceptor();
 
-    if (!httpClient.interceptors().contains(interceptor)) {
-      httpClient.addInterceptor(interceptor);
+    if (!httpClient.interceptors().contains(errorInterceptor)) {
+      httpClient.addInterceptor(errorInterceptor);
+    }
+
+    if (!httpClient.interceptors().contains(authenticationInterceptor)) {
+      httpClient.addInterceptor(authenticationInterceptor);
       builder.client(httpClient.build());
       retrofitInstance = builder.build();
     }
@@ -71,5 +82,9 @@ public final class RequestManager {
    */
   public static ErrorResponse resolveErrorBodyFromResponse(retrofit2.Response response) throws IOException {
     return gson.fromJson(response.errorBody().string(), ErrorResponse.class);
+  }
+
+  public static ErrorResponse resolveErrorBodyFromJsonString(String body) {
+    return gson.fromJson(body, ErrorResponse.class);
   }
 }
