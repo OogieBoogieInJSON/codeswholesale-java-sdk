@@ -1,7 +1,7 @@
 package base;
 
 import com.google.gson.Gson;
-import exception.AuthorizationFailedException;
+import exception.AuthenticationFailedException;
 import lombok.Setter;
 import models.ErrorResponse;
 import okhttp3.OkHttpClient;
@@ -32,6 +32,12 @@ public final class RequestManager {
 
   private static Boolean isAuthenticated = false;
 
+  /**
+   * Creates an unauthenticated client which is used for authentication
+   * @param serviceClass
+   * @param <S>
+   * @return
+     */
   public static <S> S createUnauthenticatedService(Class<S> serviceClass) {
     OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
     Retrofit.Builder builder = new Retrofit.Builder().baseUrl(host).addConverterFactory(GsonConverterFactory.create());
@@ -42,7 +48,15 @@ public final class RequestManager {
     return builder.build().create(serviceClass);
   }
 
-  public static <S> S createService(Class<S> serviceClass) throws IOException, AuthorizationFailedException {
+  /**
+   * Check if client is authenticated or not. Try to authenticate or create the authenticated service
+   * @param serviceClass
+   * @param <S>
+   * @return
+   * @throws IOException
+   * @throws AuthenticationFailedException
+     */
+  public static <S> S createService(Class<S> serviceClass) throws IOException, AuthenticationFailedException {
     if (!isAuthenticated) {
       accessToken = authenticate(apiContext);
     }
@@ -50,7 +64,7 @@ public final class RequestManager {
     return createAuthenticatedService(serviceClass);
   }
 
-  public static AccessToken authenticate(APIContext apiContext) throws AuthorizationFailedException, IOException {
+  public static AccessToken authenticate(APIContext apiContext) throws AuthenticationFailedException, IOException {
     AccessToken accessToken = OAuthTokenCredential.generateToken(apiContext);
 
     isAuthenticated = true;
@@ -58,6 +72,12 @@ public final class RequestManager {
     return accessToken;
   }
 
+  /**
+   * Create an authenticated client with additional interceptors
+   * @param serviceClass
+   * @param <S>
+   * @return a new client instance for desired class that is used for sending requests
+     */
   private static <S> S createAuthenticatedService(Class<S> serviceClass) {
     AuthenticationInterceptor authenticationInterceptor = new AuthenticationInterceptor(accessToken, apiContext);
     ErrorInterceptor errorInterceptor = new ErrorInterceptor();
@@ -76,7 +96,7 @@ public final class RequestManager {
   }
 
   /**
-   * Convert error body string to object
+   * Convert error body string from response into an ErrorResponse object
    * @param response
    * @return converted error body string
    */
@@ -84,6 +104,11 @@ public final class RequestManager {
     return gson.fromJson(response.errorBody().string(), ErrorResponse.class);
   }
 
+  /**
+   * Convert error body string into an ErrorResponse object
+   * @param body
+   * @return converted error body string
+     */
   public static ErrorResponse resolveErrorBodyFromJsonString(String body) {
     return gson.fromJson(body, ErrorResponse.class);
   }

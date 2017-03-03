@@ -1,6 +1,5 @@
 package base;
 
-import exception.AuthorizationFailedException;
 import exception.ErrorResponseException;
 import models.ErrorResponse;
 import okhttp3.Interceptor;

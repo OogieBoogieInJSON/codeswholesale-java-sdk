@@ -1,6 +1,6 @@
 package base;
 
-import exception.AuthorizationFailedException;
+import exception.AuthenticationFailedException;
 import lombok.AllArgsConstructor;
 import okhttp3.Interceptor;
 import okhttp3.Request;
@@ -9,6 +9,10 @@ import okhttp3.Response;
 import java.io.IOException;
 
 @AllArgsConstructor
+/**
+ * Interceptor that will add the Authorization header for each sent request.
+ * Besides, it checks if token has expires and authenticates again
+ */
 public class AuthenticationInterceptor implements Interceptor {
   private final String AUTH_HEADER_NAME = "Authorization";
 
@@ -21,7 +25,7 @@ public class AuthenticationInterceptor implements Interceptor {
     if (accessToken.hasExpired()) {
       try {
         accessToken = RequestManager.authenticate(apiContext);
-      } catch (AuthorizationFailedException e) {
+      } catch (AuthenticationFailedException e) {
         throw new IOException("Failed to authenticate", e);
       }
     }

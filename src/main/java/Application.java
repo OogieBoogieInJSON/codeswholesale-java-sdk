@@ -1,9 +1,7 @@
 import base.API;
 import base.APIContext;
-import exception.AuthorizationFailedException;
-import resources.Order;
+import exception.AuthenticationFailedException;
 import resources.Product;
-import resources.Products;
 
 import java.io.IOException;
 
@@ -20,7 +18,7 @@ public class Application {
       System.out.print(order);
     } catch (IOException e) {
       e.printStackTrace();
-    } catch (AuthorizationFailedException e) {
+    } catch (AuthenticationFailedException e) {
       e.printStackTrace();
     }
   }
